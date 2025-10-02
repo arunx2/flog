@@ -132,6 +132,12 @@ func NewLog(format string, t time.Time, length int) string {
 		return NewJSONLogFormat(t)
 	case "spring_boot":
 		return NewSpringBootLogFormat(t, length)
+	case "infoblox_dns_request":
+		return NewInfobloxDNSRequestLog(t)
+	case "infoblox_dns_response":
+		return NewInfobloxDNSResponseLog(t)
+	case "infoblox_dns":
+		return NewInfobloxDNSLog(t)
 	default:
 		return ""
 	}

@@ -25,6 +25,10 @@ const (
 	JSONLogFormat = `{"host":"%s", "user-identifier":"%s", "datetime":"%s", "method": "%s", "request": "%s", "protocol":"%s", "status":%d, "bytes":%d, "referer": "%s"}`
 	// SpringBootLogFormat : "{timestamp} {severity} {pid} --- [{thread-id}] {classname}: {message}"
 	SpringBootLogFormat = "%s %s %s --- [%s] %s: %s"
+	// InfobloxDNSRequestLogFormat : "{timestamp} client [@iface] {ip#port}: query: {domain}. {class} {type} {setDC} ({nsip})"
+	InfobloxDNSRequestLogFormat = "%s client%s%s#%d: query: %s. %s %s %s (%s)"
+	// InfoblocDNSResponseLogFormat : {timestamp} client {ip}#{port}: [view:] {proto}: query: {domain}. {class} {type} response: {rcode} {flags} {rr}
+	InfobloxDNSResponseLogFormat = "%s client %s#%d: %s%s: query: %s. %s %s response: %s %s %s"
 )
 
 func message(length int) string {
@@ -161,4 +165,58 @@ func NewSpringBootLogFormat(t time.Time, length int) string {
 		gofakeit.HackerPhrase(),
 	)
 	return preMsg + message(length-len(preMsg))
+}
+
+// NewInfobloxDNSRequestLog creates a log string with infoblox dns request log format (not verified. Built based on user info)
+func NewInfobloxDNSRequestLog(t time.Time) string {
+	at := " "
+	if gofakeit.Bool() {
+		at += "@" + gofakeit.Word() + " "
+	}
+	return fmt.Sprintf(
+		InfobloxDNSRequestLogFormat,
+		t.Format(InfobloxDNS),
+		at,
+		gofakeit.IPv4Address(),
+		gofakeit.Number(30000, 65535),
+		gofakeit.DomainName(),
+		"IN",
+		"A",
+		"+EDC",
+		gofakeit.IPv4Address(),
+	)
+}
+
+// NewInfobloxDNSResponseLog creates a log string with infoblox dns response log format (not verified. Built based on user info)
+func NewInfobloxDNSResponseLog(t time.Time) string {
+	view := ""
+	protocol := "tcp"
+	if gofakeit.Bool() {
+		view = "default: "
+	}
+	if gofakeit.Bool() {
+		protocol = "udp"
+	}
+	return fmt.Sprintf(
+		InfobloxDNSResponseLogFormat,
+		t.Format(InfobloxDNS),
+		gofakeit.IPv4Address(),
+		gofakeit.Number(30000, 65535),
+		view,
+		protocol,
+		gofakeit.DomainName(),
+		"IN",
+		"A",
+		"NOERROR",
+		"qr aa",
+		gofakeit.IPv4Address(),
+	)
+}
+
+// NewInfobloxDNSLog creates either a request or response log
+func NewInfobloxDNSLog(t time.Time) string {
+	if gofakeit.Bool() {
+		return NewInfobloxDNSRequestLog(t)
+	}
+	return NewInfobloxDNSResponseLog(t)
 }
